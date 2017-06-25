@@ -42,8 +42,13 @@ set_json_start:
         cp      2
         jp      nz, type_mismatch
         ; Set json start
-        ld      hl, (dac)
+        ld      hl, (dac+2)
         ld      (json_start), hl
+        ; Check for valid json.
+        call    check_json
+        ccf
+        sbc     hl, hl
+        ld      (dac+2), hl
         ret
 
 ; ----------------------------------------------------------------
@@ -60,6 +65,23 @@ get_json_type:
         or      l
         ld      e, illegal_fcall
         jp      z, error_handler
+        ; Save sentinel
+        ld      a, (dac)
+        ld      hl, (dac + 1)
+        add     a, l
+        ld      l, a
+        ld      a, h
+        adc     a, 0
+        ld      h, a
+        ld      a, (hl)
+        ld      (sentinel), a
+        ld      (hl), 0
+        ; Start parsing
+        ld      hl, (json_start)
+        ld      (json_pos), hl
+        ld      hl, (dac + 1)
+        ld      (path_pos), hl
+        call    parse_token
         ; Return an integer
         ld      a, 2
         ld      (valtyp), a
@@ -68,9 +90,90 @@ get_json_type:
         ret
 
 ; ----------------------------------------------------------------
+
+parse_token:
+;        ld      hl, (path_pos)
+;        call    getchar
+        ret
+
+; ----------------------------------------------------------------
+
+skip_whitespace:
+        ld      a, (hl)
+        cp      32
+        jr      z, 1f
+        cp      10
+        jr      z, 1f
+        cp      13
+        jr      z, 1f
+        cp      9
+        ret     nz
+1:
+        inc     hl
+        jr      skip_whitespace
+        
+; ----------------------------------------------------------------
+
+check_json:
+        call    skip_whitespace
+        ld      a, '{' 
+        cp      (hl)
+        jr      z, check_object
+        ld      a, '['
+        cp      (hl)
+        jr      z, check_array
+json_error:
+        scf
+        ret
+
+check_object:
+        ; HL must be pointing to '{'
+        inc     hl
+        call    skip_whitespace
+        cp      '}'
+        ret     z
+        call    check_string
+        call    skip_whitespace
+        cp      ':'
+        jr      nz, json_error
+        ret
+
+check_array:
+        ; HL must be pointing to '['
+        scf
+        ret
+
+check_string:
+        call    skip_whitespace
+        ld      a, '"'
+        cp      (hl)
+        jr      nz, json_error
+        inc     hl
+        call    check_key
+        or      a
+        ret
+
+check_key:
+        ld      a, (hl)
+        cp      '"'
+        jr      z, check_key_exit
+        cp      '\\'
+        jr      nz, 1f
+        inc     hl
+1:
+        inc     hl
+        jr      check_key
+check_key_exit:
+        inc     hl
+        ret
+        
+; ----------------------------------------------------------------
 ; Variables
 
 json_start:     dw      0
+json_pos:       dw      0
+path_pos:       dw      0
+sentinel:       db      0
 
 ; ----------------------------------------------------------------
 
