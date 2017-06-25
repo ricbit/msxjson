@@ -6,7 +6,7 @@ run : json.bin
 
 test : json.bin 
 	cp test/test.bas test/autoexec.bas
-	./openmsx -machine Panasonic_FS-A1GT -diska test
+	./openmsx -machine Panasonic_FS-A1GT -diska test -script test.tcl
 
 json.bin : json.asm
 	./sjasmplus json.asm --lst=json.lst --sym=json.sym

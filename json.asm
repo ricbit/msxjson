@@ -117,11 +117,9 @@ skip_whitespace:
 
 check_json:
         call    skip_whitespace
-        ld      a, '{' 
-        cp      (hl)
+        cp      '{'
         jr      z, check_object
-        ld      a, '['
-        cp      (hl)
+        cp      '['
         jr      z, check_array
 json_error:
         scf
@@ -132,11 +130,36 @@ check_object:
         inc     hl
         call    skip_whitespace
         cp      '}'
-        ret     z
+        jr      z, check_success
         call    check_string
+        ret     c
         call    skip_whitespace
         cp      ':'
         jr      nz, json_error
+        inc     hl
+        call    check_anything
+        ret     c
+        call    skip_whitespace
+        cp      '}'
+        jr      z, check_success
+        cp      ','
+        jr      z, check_object
+        scf
+        ret
+
+check_success:
+        inc     hl
+        ret
+
+check_anything:
+        call    skip_whitespace
+        cp      '{'
+        jr      z, check_object
+        cp      '['
+        jr      z, check_array
+        cp      '"'
+        jr      z, check_string
+        scf
         ret
 
 check_array:
@@ -144,33 +167,28 @@ check_array:
         inc     hl
         call    skip_whitespace
         cp      ']'
-        ret     z
+        jr      z, check_success
         scf
         ret
 
 check_string:
         call    skip_whitespace
-        ld      a, '"'
-        cp      (hl)
+        cp      '"'
         jr      nz, json_error
         inc     hl
         call    check_key
-        or      a
         ret
 
 check_key:
         ld      a, (hl)
         cp      '"'
-        jr      z, check_key_exit
+        jr      z, check_success
         cp      '\\'
         jr      nz, 1f
         inc     hl
 1:
         inc     hl
         jr      check_key
-check_key_exit:
-        inc     hl
-        ret
         
 ; ----------------------------------------------------------------
 ; Variables
