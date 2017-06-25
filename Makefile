@@ -1,6 +1,11 @@
 all : json.bin
 
 run : json.bin 
+	rm -rf test/autoexec.bas
+	./openmsx -machine Panasonic_FS-A1GT -diska test
+
+test : json.bin 
+	cp test/test.bas test/autoexec.bas
 	./openmsx -machine Panasonic_FS-A1GT -diska test
 
 json.bin : json.asm

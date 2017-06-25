@@ -42,13 +42,14 @@ set_json_start:
         cp      2
         jp      nz, type_mismatch
         ; Set json start
-        ld      hl, (dac+2)
+        ld      hl, (dac + 2)
         ld      (json_start), hl
         ; Check for valid json.
         call    check_json
+        ; Return 0=error, -1=success
         ccf
         sbc     hl, hl
-        ld      (dac+2), hl
+        ld      (dac + 2), hl
         ret
 
 ; ----------------------------------------------------------------
@@ -86,7 +87,7 @@ get_json_type:
         ld      a, 2
         ld      (valtyp), a
         ld      hl, 0
-        ld      (dac), hl
+        ld      (dac + 2), hl
         ret
 
 ; ----------------------------------------------------------------
@@ -140,6 +141,10 @@ check_object:
 
 check_array:
         ; HL must be pointing to '['
+        inc     hl
+        call    skip_whitespace
+        cp      ']'
+        ret     z
         scf
         ret
 
