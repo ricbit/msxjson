@@ -131,6 +131,7 @@ check_object:
         call    skip_whitespace
         cp      '}'
         jr      z, check_success
+check_object_key
         call    check_string
         ret     c
         call    skip_whitespace
@@ -143,9 +144,9 @@ check_object:
         cp      '}'
         jr      z, check_success
         cp      ','
-        jr      z, check_object
-        scf
-        ret
+        jr      nz, json_error
+        call    skip_whitespace
+        jr      check_object_key
 
 check_success:
         inc     hl
