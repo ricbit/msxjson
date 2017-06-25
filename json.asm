@@ -145,6 +145,7 @@ check_object_key
         jr      z, check_success
         cp      ','
         jr      nz, json_error
+        inc     hl
         call    skip_whitespace
         jr      check_object_key
 
@@ -169,8 +170,17 @@ check_array:
         call    skip_whitespace
         cp      ']'
         jr      z, check_success
-        scf
-        ret
+check_array_next:
+        call    check_anything
+        ret     c
+        call    skip_whitespace
+        cp      ']'
+        jr      z, check_success
+        cp      ','
+        jr      nz, json_error
+        inc     hl
+        call    skip_whitespace
+        jr      check_array_next
 
 check_string:
         call    skip_whitespace
