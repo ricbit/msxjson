@@ -161,7 +161,26 @@ check_anything:
         jr      z, check_array
         cp      '"'
         jr      z, check_string
-        scf
+        ; fall through to check_number
+
+check_number:
+        cp      '0'
+        jr      z, json_error
+        call    check_digit
+        jr      nc, json_error
+1:
+        inc     hl
+        call    check_digit
+        ret     nc
+        jr      1b
+
+check_digit:
+        ; Returns CF=digit, NC=non-digit
+        ld      a, (hl)
+        cp      '9'
+        ret     nc
+        cp      '0'
+        ccf
         ret
 
 check_array:
