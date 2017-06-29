@@ -191,14 +191,25 @@ check_number:
 
 check_fraction:
         cp      '.'
+        jr      nz, check_scientific
+        inc     hl
+        ld      a, (hl)
+        call    check_digit_sequence
+        ret     c
+        ; fall through to check_scientific
+
+; ----------------------------------------------------------------
+
+check_scientific:
+        cp      'e'
+        jr      z, 1f
+        cp      'E'
         jr      z, 1f
         or      a
         ret
 1:
         inc     hl
-        ld      a, (hl)
-        call    check_digit_sequence
-        ret
+        ; fall through to check_digit_sequence
 
 ; ----------------------------------------------------------------
 
