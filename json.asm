@@ -166,7 +166,7 @@ check_anything:
         cp      '['
         jr      z, check_array
         cp      '"'
-        jr      z, check_string
+        jp      z, check_string
         cp      't'
         jr      z, check_true
         cp      'f'
@@ -214,6 +214,15 @@ check_scientific:
         or      a
         ret
 1:
+        inc     hl
+        ld      a, (hl)
+        cp      '+'
+        jr      nz, 2f
+        inc     hl
+        jr      check_digit_sequence
+2:
+        cp      '-'
+        jr      nz, check_digit_sequence
         inc     hl
         ; fall through to check_digit_sequence
 
@@ -269,7 +278,7 @@ check_array:
         inc     hl
         call    skip_whitespace
         cp      ']'
-        jr      z, check_success
+        jp      z, check_success
 check_array_next:
         call    check_anything
         ret     c
