@@ -125,6 +125,8 @@ json_error:
         scf
         ret
 
+; ----------------------------------------------------------------
+
 check_object:
         ; HL must be pointing to '{'
         inc     hl
@@ -149,9 +151,13 @@ check_object_key
         call    skip_whitespace
         jr      check_object_key
 
+; ----------------------------------------------------------------
+
 check_success:
         inc     hl
         ret
+
+; ----------------------------------------------------------------
 
 check_anything:
         call    skip_whitespace
@@ -163,16 +169,50 @@ check_anything:
         jr      z, check_string
         ; fall through to check_number
 
+; ----------------------------------------------------------------
+
 check_number:
+        cp      '-'
+        jr      nz, 2f
+        inc     hl
+        ld      a, (hl)
+2:
         cp      '0'
-        jr      z, json_error
+        jr      nz, 3f
+        inc     hl
+        ld      a, (hl)
+        jr      check_fraction
+3:
+        call    check_digit_sequence
+        ret     c
+        ; fall through to check_fraction
+
+; ----------------------------------------------------------------
+
+check_fraction:
+        cp      '.'
+        jr      z, 1f
+        or      a
+        ret
+1:
+        inc     hl
+        ld      a, (hl)
+        call    check_digit_sequence
+        ret
+
+; ----------------------------------------------------------------
+
+check_digit_sequence:
+        ; Returns CF=not a digit sequence, NC=digit sequence
         call    check_digit
         jr      nc, json_error
 1:
         inc     hl
         call    check_digit
-        ret     nc
-        jr      1b
+        jr      c, 1b
+        ret
+
+; ----------------------------------------------------------------
 
 check_digit:
         ; Returns CF=digit, NC=non-digit
@@ -182,6 +222,8 @@ check_digit:
         cp      '0'
         ccf
         ret
+
+; ----------------------------------------------------------------
 
 check_array:
         ; HL must be pointing to '['
@@ -196,16 +238,20 @@ check_array_next:
         cp      ']'
         jr      z, check_success
         cp      ','
-        jr      nz, json_error
+        jp      nz, json_error
         inc     hl
         call    skip_whitespace
         jr      check_array_next
 
+; ----------------------------------------------------------------
+
 check_string:
         cp      '"'
-        jr      nz, json_error
+        jp      nz, json_error
         inc     hl
         ; fall through to check_key
+
+; ----------------------------------------------------------------
 
 check_key:
         ld      a, (hl)
