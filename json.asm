@@ -202,12 +202,10 @@ check_array_next:
         jr      check_array_next
 
 check_string:
-        call    skip_whitespace
         cp      '"'
         jr      nz, json_error
         inc     hl
-        call    check_key
-        ret
+        ; fall through to check_key
 
 check_key:
         ld      a, (hl)
