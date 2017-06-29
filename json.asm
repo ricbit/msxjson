@@ -112,7 +112,7 @@ skip_whitespace:
 1:
         inc     hl
         jr      skip_whitespace
-        
+
 ; ----------------------------------------------------------------
 
 check_json:
@@ -120,7 +120,7 @@ check_json:
         cp      '{'
         jr      z, check_object
         cp      '['
-        jr      z, check_array
+        jp      z, check_array
 json_error:
         scf
         ret
@@ -167,6 +167,12 @@ check_anything:
         jr      z, check_array
         cp      '"'
         jr      z, check_string
+        cp      't'
+        jr      z, check_true
+        cp      'f'
+        jr      z, check_false
+        cp      'n'
+        jr      z, check_null
         ; fall through to check_number
 
 ; ----------------------------------------------------------------
@@ -216,12 +222,34 @@ check_scientific:
 check_digit_sequence:
         ; Returns CF=not a digit sequence, NC=digit sequence
         call    check_digit
-        jr      nc, json_error
+        jp      nc, json_error
 1:
         inc     hl
         call    check_digit
         jr      c, 1b
         ret
+
+; ----------------------------------------------------------------
+
+check_true:
+        ld      de, token_true
+        jr      1f
+
+check_false:
+        ld      de, token_false
+        jr      1f
+
+check_null:
+        ld      de, token_null
+1:
+        ld      a, (de)
+        or      a
+        ret     z
+        cp      (hl)
+        jp      nz, json_error
+        inc     hl
+        inc     de
+        jr      1b
 
 ; ----------------------------------------------------------------
 
@@ -247,7 +275,7 @@ check_array_next:
         ret     c
         call    skip_whitespace
         cp      ']'
-        jr      z, check_success
+        jp      z, check_success
         cp      ','
         jp      nz, json_error
         inc     hl
@@ -267,17 +295,20 @@ check_string:
 check_key:
         ld      a, (hl)
         cp      '"'
-        jr      z, check_success
+        jp      z, check_success
         cp      '\\'
         jr      nz, 1f
         inc     hl
 1:
         inc     hl
         jr      check_key
-        
+
 ; ----------------------------------------------------------------
 ; Variables
 
+token_true:     db      'true', 0
+token_false:    db      'false', 0
+token_null:     db      'null', 0
 json_start:     dw      0
 json_pos:       dw      0
 path_pos:       dw      0
