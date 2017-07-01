@@ -262,17 +262,6 @@ check_null:
 
 ; ----------------------------------------------------------------
 
-check_digit:
-        ; Returns CF=digit, NC=non-digit
-        ld      a, (hl)
-        cp      '9'
-        ret     nc
-        cp      '0'
-        ccf
-        ret
-
-; ----------------------------------------------------------------
-
 check_array:
         ; HL must be pointing to '['
         inc     hl
@@ -306,11 +295,71 @@ check_key:
         cp      '"'
         jp      z, check_success
         cp      '\\'
-        jr      nz, 1f
-        inc     hl
-1:
+        jr      z, check_escape
+check_key_next:
         inc     hl
         jr      check_key
+
+; ----------------------------------------------------------------
+
+check_escape:
+        inc     hl
+        ld      a, (hl)
+        cp      '"'
+        jr      z, check_key_next
+        cp      '\\'
+        jr      z, check_key_next
+        cp      '/'
+        jr      z, check_key_next
+        cp      'b'
+        jr      z, check_key_next
+        cp      'f'
+        jr      z, check_key_next
+        cp      'n'
+        jr      z, check_key_next
+        cp      'r'
+        jr      z, check_key_next
+        cp      't'
+        jr      z, check_key_next
+        cp      'u'
+        jp      nz, json_error
+        ld      b, 4
+1:
+        inc     hl
+        call    check_hex_digit
+        jp      nc, json_error
+        djnz    1b
+        jr      check_key_next
+
+; ----------------------------------------------------------------
+
+        macro   CHECK_LIMITS lower, upper
+        ; Returns CF=digit, NC=non-digit
+        ld      a, (hl)
+        cp      upper + 1
+        ret     nc
+        cp      lower
+        ccf
+        ret
+        endm
+
+; ----------------------------------------------------------------
+
+check_hex_digit:
+        call    check_digit
+        ret     c
+        call    check_hex_lower
+        ret     c
+        ; fall through to check_hex_upper
+
+check_hex_upper:
+        CHECK_LIMITS 'A', 'F'
+
+check_hex_lower:
+        CHECK_LIMITS 'a', 'f'
+
+check_digit:
+        CHECK_LIMITS '0', '9'
 
 ; ----------------------------------------------------------------
 ; Variables
