@@ -67,34 +67,80 @@ get_json_type:
         ld      e, illegal_fcall
         jp      z, error_handler
         ; Save sentinel
-        ld      a, (dac)
-        ld      hl, (dac + 1)
+        ld      ix, (dac + 2)
+        ld      a, (ix)
+        ld      l, (ix + 1)
+        ld      h, (ix + 2)
+        ld      (path_pos), hl
         add     a, l
         ld      l, a
         ld      a, h
         adc     a, 0
         ld      h, a
         ld      a, (hl)
+        ld      (sentinel_pos), hl
         ld      (sentinel), a
         ld      (hl), 0
         ; Start parsing
         ld      hl, (json_start)
         ld      (json_pos), hl
-        ld      hl, (dac + 1)
-        ld      (path_pos), hl
         call    parse_token
+        ex      af, af
+        ; Restore sentinel
+        ld      hl, (sentinel_pos)
+        ld      a, (sentinel)
+        ld      (hl), a
         ; Return an integer
         ld      a, 2
         ld      (valtyp), a
-        ld      hl, 0
+        ex      af, af
+        ld      h, 0
+        ld      l, a
         ld      (dac + 2), hl
+        bit     7, a
+        ld      e, illegal_fcall
+        jp      nz, error_handler
         ret
 
 ; ----------------------------------------------------------------
 
 parse_token:
-;        ld      hl, (path_pos)
-;        call    getchar
+        ld      hl, (path_pos)
+        exx
+        ld      hl, (json_pos)
+        exx
+parse_token_main:
+        ld      a, (hl)
+        or      a
+        jr      z, parse_identify
+        ld      a, 255
+        ret
+
+; ----------------------------------------------------------------
+
+        macro   IDENTIFY token, value
+        cp      token
+        jr      nz, .skip
+        ld      a, value
+        ret
+.skip:
+        endm
+
+parse_identify:
+        exx
+        call    skip_whitespace
+        IDENTIFY '{', 1
+        IDENTIFY '[', 2
+        IDENTIFY '"', 3
+        IDENTIFY 't', 5
+        IDENTIFY 'f', 6
+        IDENTIFY 'n', 7
+        push    hl
+        call    check_number
+        pop     hl
+        ld      a, 4
+        ret     nc
+        ld      a, 0
         ret
 
 ; ----------------------------------------------------------------
@@ -371,6 +417,7 @@ json_start:     dw      0
 json_pos:       dw      0
 path_pos:       dw      0
 sentinel:       db      0
+sentinel_pos:   dw      0
 
 ; ----------------------------------------------------------------
 
