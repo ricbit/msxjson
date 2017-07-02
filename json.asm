@@ -115,6 +115,8 @@ parse_token_main:
         jr      z, parse_identify
         cp      '#'
         jr      z, parse_position
+        cp      '$'
+        jp      z, parse_value
         ld      a, 255
         ret
 
@@ -189,13 +191,13 @@ parse_fetch:
         jr      z, parse_token_main
         exx
         call    check_anything
-        jr      c, 2f
+        jr      c, parse_fail
         call    skip_whitespace
         cp      ']'
-        jr      z, 2f
+        jr      z, parse_fail
         cp      ','
         jr      z, 1b
-2:
+parse_fail:
         xor     a
         ret
 
@@ -203,29 +205,42 @@ parse_fetch:
 
 parse_object:
         inc     hl
-        call    skip_whitespace
         exx
         ld      a, e
         or      d
         dec     de
         jp      z, parse_token_main
         exx
+        call    skip_whitespace
         call    check_string
-        jr      c, 2f
+        jr      c, parse_fail
         call    skip_whitespace
         cp      ':'
-        jr      nz, 2f
+        jr      nz, parse_fail
         inc     hl
         call    check_anything
-        jr      c, 2f
+        jr      c, parse_fail
         call    skip_whitespace
         cp      '}'
-        jr      z, 2f
+        jr      z, parse_fail
         cp      ','
         jr      z, parse_object
-2:
-        xor     a
-        ret
+        jr      parse_fail
+
+; ----------------------------------------------------------------
+
+parse_value:
+        inc     hl
+        exx
+        call    skip_whitespace
+        call    check_string
+        jr      c, parse_fail
+        call    skip_whitespace
+        cp      ':'
+        jr      nz, parse_fail
+        inc     hl
+        exx
+        jp      parse_token_main
 
 ; ----------------------------------------------------------------
 
