@@ -254,9 +254,7 @@ parse_object:
         jp      z, parse_token_main
         exx
         call    skip_whitespace
-        call    check_key
-        jr      c, parse_fail
-        call    check_anything
+        call    check_key_value
         jr      c, parse_fail
         call    skip_whitespace
         cp      '}'
@@ -292,9 +290,7 @@ parse_key:
         jr      c, parse_key_value
         exx
         call    skip_whitespace
-        call    check_key
-        jr      c, parse_fail
-        call    check_anything
+        call    check_key_value
         jr      c, parse_fail
         call    skip_whitespace
         cp      '}'
@@ -367,7 +363,7 @@ parse_string_common:
         ld      a, h
         cpl
         cp      255
-        sbc     a,a
+        sbc     a, a
         or      l
         ld      (dsctmp), a
         ld      a, 3
@@ -420,10 +416,8 @@ check_object:
         call    skip_whitespace
         cp      '}'
         jr      z, check_success
-check_object_key
-        call    check_key
-        ret     c
-        call    check_anything
+check_object_key:
+        call    check_key_value
         ret     c
         call    skip_whitespace
         cp      '}'
@@ -433,6 +427,13 @@ check_object_key
         inc     hl
         call    skip_whitespace
         jr      check_object_key
+
+; ----------------------------------------------------------------
+
+check_key_value:
+        call    check_key
+        ret     c
+        jp      check_anything
 
 ; ----------------------------------------------------------------
 
