@@ -61,8 +61,8 @@ set_json_start:
 get_json_type:
         ; Set token type flag
         xor     a
-        ld      (get_action), a
 get_json_action:
+        ld      (get_action), a
         ; Check for string argument
         ld      a, (valtyp)
         cp      3
@@ -122,7 +122,6 @@ get_json_action:
 get_json_value:
         ; Set token type flag
         ld      a, 1
-        ld      (get_action), a
         jr      get_json_action
 get_string:
         ; Return a string
@@ -430,13 +429,6 @@ check_object_key:
 
 ; ----------------------------------------------------------------
 
-check_key_value:
-        call    check_key
-        ret     c
-        jp      check_anything
-
-; ----------------------------------------------------------------
-
 check_key:
         call    check_string
         ret     c
@@ -447,6 +439,13 @@ check_key:
 check_success:
         inc     hl
         ret
+
+; ----------------------------------------------------------------
+
+check_key_value:
+        call    check_key
+        ret     c
+        ; Fall through to check_anything
 
 ; ----------------------------------------------------------------
 
