@@ -441,11 +441,6 @@ check_key:
         ret     c
         call    skip_whitespace
         cp      ':'
-        inc     hl
-        ret
-
-; ----------------------------------------------------------------
-
 check_success:
         inc     hl
         ret
