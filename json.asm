@@ -384,6 +384,7 @@ parse_string:
         ld      (dsctmp + 1), hl
         push    hl
         call    check_anything
+parse_string_common:
         or      a
         pop     de
         sbc     hl, de
@@ -405,17 +406,7 @@ parse_string_literal:
         dec     hl
         call    check_anything
         dec     hl
-        or      a
-        pop     de
-        sbc     hl, de
-        ld      a, h
-        cpl
-        cp      255
-        sbc     a,a
-        or      l
-        ld      (dsctmp), a
-        ld      a, 3
-        ret
+        jr      parse_string_common
 
 ; ----------------------------------------------------------------
 
