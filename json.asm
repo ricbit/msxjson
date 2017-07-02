@@ -159,32 +159,32 @@ parse_token_main:
 
 ; ----------------------------------------------------------------
 
-        macro   IDENTIFY token, value
-        cp      token
-        jr      nz, .skip
-        ld      a, value
-        ret
-.skip:
-        endm
-
 parse_identify:
         exx
         ld      a, (get_action)
         or      a
         jp      nz, parse_string
         call    skip_whitespace
-        IDENTIFY '{', 1
-        IDENTIFY '[', 2
-        IDENTIFY '"', 3
-        IDENTIFY 't', 5
-        IDENTIFY 'f', 6
-        IDENTIFY 'n', 7
+        ld      bc, 7 * 256 + 1
+        ld      de, identifiers
+        ex      de, hl
+1:
+        cp      (hl)
+        jr      z, 2f
+        inc     c
+        inc     hl
+        djnz    1b
+        ex      de, hl
         push    hl
         call    check_number
         pop     hl
         ld      a, 4
         ret     nc
         ld      a, 0
+        ret
+2:
+        ex      de, hl
+        ld      a, c
         ret
 
 ; ----------------------------------------------------------------
@@ -215,22 +215,14 @@ parse_position:
 ; ----------------------------------------------------------------
 
 parse_fetch:
-        exx
-        call    skip_whitespace
+        call    skip_whitespace_exx
         cp      '{'
         jr      z, parse_object
         cp      '['
         ld      a, 255
         ret     nz
 1:
-        inc     hl
-        call    skip_whitespace
-        exx
-        ld      a, e
-        or      d
-        dec     de
-        jp      z, parse_token_main
-        exx
+        call    parse_end_collection
         call    check_anything
         jr      c, parse_fail
         call    skip_whitespace
@@ -244,15 +236,20 @@ parse_fail:
 
 ; ----------------------------------------------------------------
 
-parse_object:
+parse_end_collection:
         inc     hl
         exx
         ld      a, e
         or      d
         dec     de
-        jp      z, parse_token_main
-        exx
-        call    skip_whitespace
+        jp      nz, skip_whitespace_exx
+        pop     bc
+        jp      parse_token_main
+
+; ----------------------------------------------------------------
+
+parse_object:
+        call    parse_end_collection
         call    check_key_value
         jr      c, parse_fail
         call    skip_whitespace
@@ -267,8 +264,7 @@ parse_object:
 parse_value:
         inc     hl
 parse_key_value:
-        exx
-        call    skip_whitespace
+        call    skip_whitespace_exx
         call    check_key
         jp      c, parse_fail
         jp      parse_token_main_exx
@@ -277,8 +273,7 @@ parse_key_value:
 
 parse_key:
         inc     hl
-        exx
-        call    skip_whitespace
+        call    skip_whitespace_exx
         cp      '{'
         jp      nz, parse_token_main_exx
         inc     hl
@@ -287,8 +282,7 @@ parse_key:
 1:
         call    compare_key
         jr      c, parse_key_value
-        exx
-        call    skip_whitespace
+        call    skip_whitespace_exx
         call    check_key_value
         jr      c, parse_fail
         call    skip_whitespace
@@ -305,8 +299,7 @@ parse_key:
 compare_key:
         ; Returns CF=key found, NC=key not found
         ld      (path_pos), hl
-        exx
-        call    skip_whitespace
+        call    skip_whitespace_exx
         push    hl
         exx
         pop     de
@@ -382,6 +375,8 @@ parse_string_literal:
 
 ; ----------------------------------------------------------------
 
+skip_whitespace_exx:
+        exx
 skip_whitespace:
         ld      a, (hl)
         cp      32
@@ -643,6 +638,7 @@ check_digit:
 ; ----------------------------------------------------------------
 ; Constants
 
+identifiers:    db      '{["0tfn'
 string_escapes: db      '"\/bfnrt'
 token_true:     db      'true', 0
 token_false:    db      'false', 0
