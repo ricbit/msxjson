@@ -11,6 +11,7 @@
 usrtab          equ     0F39Ah  ; Callbacks for USR functions
 valtyp          equ     0F663h  ; Type of argument in DAC
 dac             equ     0F7F6h  ; Accumulator for MSX BASIC
+dsctmp          equ     0F698h  ; Temporary string descriptor
 type_mismatch   equ     0406Dh  ; Type mismatch error handler
 error_handler   equ     0406Fh  ; Generic BASIC error handler
 illegal_fcall   equ     00005h  ; Error code for Illegal function call
@@ -58,6 +59,10 @@ set_json_start:
 ; Get json token type
 
 get_json_type:
+        ; Set token type flag
+        xor     a
+        ld      (get_action), a
+get_json_action:
         ; Check for string argument
         ld      a, (valtyp)
         cp      3
@@ -95,6 +100,10 @@ get_json_type:
         ld      hl, (sentinel_pos)
         ld      a, (sentinel)
         ld      (hl), a
+        ; Check for string action
+        ld      a, (get_action)
+        or      a
+        jr      nz, get_string
         ; Return an integer
         ld      a, 2
         ld      (valtyp), a
@@ -111,6 +120,23 @@ get_json_type:
 ; Get json value as a string
 
 get_json_value:
+        ; Set token type flag
+        ld      a, 1
+        ld      (get_action), a
+        jr      get_json_action
+get_string:
+        ; Return a string
+        ld      a, 3
+        ld      (valtyp), a
+        ex      af, af
+        ld      e, illegal_fcall
+        cp      3
+        jp      c, error_handler
+        ld      hl, dsctmp
+        ld      (dac + 2), hl
+        bit     7, a
+        ld      e, illegal_fcall
+        jp      nz, error_handler
         ret
 
 ; ----------------------------------------------------------------
@@ -145,6 +171,9 @@ parse_token_main:
 
 parse_identify:
         exx
+        ld      a, (get_action)
+        or      a
+        jp      nz, parse_string
         call    skip_whitespace
         IDENTIFY '{', 1
         IDENTIFY '[', 2
@@ -201,7 +230,7 @@ parse_fetch:
         ld      a, e
         or      d
         dec     de
-        jr      z, parse_token_main
+        jp      z, parse_token_main
         exx
         call    check_anything
         jr      c, parse_fail
@@ -247,7 +276,7 @@ parse_value:
         exx
         call    skip_whitespace
         call    check_string
-        jr      c, parse_fail
+        jp      c, parse_fail
         call    skip_whitespace
         cp      ':'
         jr      nz, parse_fail
@@ -340,6 +369,52 @@ compare_key:
 compare_fail:
         or      a
         ld      hl, (path_pos)
+        ret
+
+; ----------------------------------------------------------------
+
+parse_string:
+        call    skip_whitespace
+        cp      '{'
+        jp      z, parse_fail
+        cp      '['
+        jp      z, parse_fail
+        cp      '"'
+        jr      z, parse_string_literal
+        ld      (dsctmp + 1), hl
+        push    hl
+        call    check_anything
+        or      a
+        pop     de
+        sbc     hl, de
+        ld      a, h
+        cpl
+        cp      255
+        sbc     a,a
+        or      l
+        ld      (dsctmp), a
+        ld      a, 3
+        ret
+
+; ----------------------------------------------------------------
+
+parse_string_literal:
+        inc     hl
+        ld      (dsctmp + 1), hl
+        push    hl
+        dec     hl
+        call    check_anything
+        dec     hl
+        or      a
+        pop     de
+        sbc     hl, de
+        ld      a, h
+        cpl
+        cp      255
+        sbc     a,a
+        or      l
+        ld      (dsctmp), a
+        ld      a, 3
         ret
 
 ; ----------------------------------------------------------------
@@ -616,6 +691,7 @@ json_start:     dw      0
 path_pos:       dw      0
 sentinel:       db      0
 sentinel_pos:   dw      0
+get_action:     db      0
 
 ; ----------------------------------------------------------------
 

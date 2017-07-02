@@ -1,16 +1,21 @@
-10 CLEAR 500,&H9000
+10 CLEAR 500,&H9000:SCREEN0:WIDTH40
 20 BLOAD"JSON.BIN",R
 30 M=6:N$="INVALID":F$="ERROR":V=0:GOSUB2000
 40 M=8:N$="VALID":F$="JSON":V=-1:GOSUB2000
 50 A$="JSON6.TXT":GOSUB3000
 60 DATA "",2,"#0",4,"#4",2,"#4#0",4,"#4#1",4,"#4#2",0
 70 DATA "#10",4,"#11",0,"#12#0",0,"END":GOSUB4000
-80 A$="JSON7.TXT":GOSUB3000
-90 DATA "",2,"#0",5,"#1",6,"#2",7,"#3",0,"END":GOSUB 4000
-100 A$="JSON5.TXT":GOSUB3000
-110 DATA "",1,"#0",3,"#0$",1,"#0$#0",3,"#0$#1$#2$",4
-120 DATA "&widget",1,"&widge",0,"&widgett",0
-130 DATA "&widget&debug",3,"&widget#1$&width",4,"END":GOSUB4000
+80 DATA "#0","0","#2","-13","#6","123.1"
+90 DATA "#8","-1.24e400","#9","-1.3e+10","END":GOSUB5000
+100 A$="JSON7.TXT":GOSUB3000
+110 DATA "",2,"#0",5,"#1",6,"#2",7,"#3",0,"END":GOSUB 4000
+120 DATA "#0","true","#1","false","#2","null","END":GOSUB5000
+130 A$="JSON5.TXT":GOSUB3000
+140 DATA "",1,"#0",3,"#0$",1,"#0$#0",3,"#0$#1$#2$",4
+150 DATA "&widget",1,"&widge",0,"&widgett",0
+160 DATA "&widget&debug",3,"&widget#1$&width",4,"END":GOSUB4000
+170 DATA "&widget&debug","on","#0$#1$&name","main_window"
+180 DATA "#0$#3$&data","Click Here","END":GOSUB5000
 990 END
 1000 OPEN A$ FOR INPUT AS 1
 1010 S=LOF(1)
@@ -30,3 +35,7 @@
 4010 PRINT "TESTING '";B$;"' ON ";A$
 4020 READ B:IF USR1(B$)<>B THEN PRINT "ERROR"
 4030 GOTO 4000
+5000 READ B$:IF B$="END" THEN RETURN
+5010 PRINT "TESTING V'";B$;"' ON ";A$
+5020 READ C$:IF USR2(B$)<>C$ THEN PRINT "ERROR"
+5030 GOTO 5000
