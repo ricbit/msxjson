@@ -335,6 +335,7 @@ compare_key:
         ld      a, (de)
         cp      '"'
         jr      nz, compare_fail
+json_error:
         scf
         ret
 compare_fail:
@@ -399,13 +400,11 @@ skip_whitespace:
 
 check_json:
         call    skip_whitespace
-        cp      '{'
-        jr      z, check_object
         cp      '['
         jp      z, check_array
-json_error:
-        scf
-        ret
+        cp      '{'
+        jr      nz, json_error
+        ; Fall through to check_object
 
 ; ----------------------------------------------------------------
 
