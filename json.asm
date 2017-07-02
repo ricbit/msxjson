@@ -147,6 +147,7 @@ parse_token_main_exx:
 parse_token_main:
         call    skip_whitespace
         or      a
+        inc     hl
         jr      z, parse_identify
         cp      '#'
         jr      z, parse_position
@@ -190,7 +191,6 @@ parse_identify:
 ; ----------------------------------------------------------------
 
 parse_position:
-        inc     hl
         ld      de, 0
         call    skip_whitespace
 1:
@@ -262,8 +262,6 @@ parse_object:
 ; ----------------------------------------------------------------
 
 parse_value:
-        inc     hl
-parse_key_value:
         call    skip_whitespace_exx
         call    check_key
         jp      c, parse_fail
@@ -272,7 +270,6 @@ parse_key_value:
 ; ----------------------------------------------------------------
 
 parse_key:
-        inc     hl
         call    skip_whitespace_exx
         cp      '{'
         jp      nz, parse_token_main_exx
@@ -281,7 +278,7 @@ parse_key:
         exx
 1:
         call    compare_key
-        jr      c, parse_key_value
+        jr      c, parse_value
         call    skip_whitespace_exx
         call    check_key_value
         jr      c, parse_fail
@@ -452,12 +449,14 @@ check_anything:
         cp      '"'
         jp      z, check_string
         cp      't'
-        jr      z, check_true
+        ld      de, token_true
+        jr      z, check_string_literal
         cp      'f'
-        jr      z, check_false
+        ld      de, token_false
+        jr      z, check_string_literal
         cp      'n'
         jr      z, check_null
-        ; fall through to check_number
+        ; Fall through to check_number
 
 ; ----------------------------------------------------------------
 
@@ -475,7 +474,7 @@ check_number:
 3:
         call    check_digit_sequence
         ret     c
-        ; fall through to check_fraction
+        ; Fall through to check_fraction
 
 ; ----------------------------------------------------------------
 
@@ -486,14 +485,13 @@ check_fraction:
         ld      a, (hl)
         call    check_digit_sequence
         ret     c
-        ; fall through to check_scientific
+        ; Fall through to check_scientific
 
 ; ----------------------------------------------------------------
 
 check_scientific:
+        or      32
         cp      'e'
-        jr      z, 1f
-        cp      'E'
         jr      z, 1f
         or      a
         ret
@@ -508,7 +506,7 @@ check_scientific:
         cp      '-'
         jr      nz, check_digit_sequence
         inc     hl
-        ; fall through to check_digit_sequence
+        ; Fall through to check_digit_sequence
 
 ; ----------------------------------------------------------------
 
@@ -524,17 +522,9 @@ check_digit_sequence:
 
 ; ----------------------------------------------------------------
 
-check_true:
-        ld      de, token_true
-        jr      1f
-
-check_false:
-        ld      de, token_false
-        jr      1f
-
 check_null:
         ld      de, token_null
-1:
+check_string_literal:
         ld      a, (de)
         or      a
         ret     z
@@ -542,7 +532,7 @@ check_null:
         jp      nz, json_error
         inc     hl
         inc     de
-        jr      1b
+        jr      check_string_literal
 
 ; ----------------------------------------------------------------
 
@@ -569,19 +559,17 @@ check_array_next:
 check_string:
         cp      '"'
         jp      nz, json_error
-        inc     hl
-        ; fall through to check_contents
+        ; Fall through to check_contents
 
 ; ----------------------------------------------------------------
 
 check_contents:
+        inc     hl
         ld      a, (hl)
         cp      '"'
         jp      z, check_success
         cp      '\\'
         jr      z, check_escape
-check_contents_next:
-        inc     hl
         jr      check_contents
 
 ; ----------------------------------------------------------------
@@ -594,7 +582,7 @@ check_escape:
         ld      hl, string_escapes
         cpir
         ex      de, hl
-        jr      z, check_contents_next
+        jr      z, check_contents
         cp      'u'
         jp      nz, json_error
         ld      b, 4
@@ -603,7 +591,7 @@ check_escape:
         call    check_hex_digit
         jp      nc, json_error
         djnz    1b
-        jr      check_contents_next
+        jr      check_contents
 
 ; ----------------------------------------------------------------
 
@@ -624,7 +612,7 @@ check_hex_digit:
         ret     c
         call    check_hex_lower
         ret     c
-        ; fall through to check_hex_upper
+        ; Fall through to check_hex_upper
 
 check_hex_upper:
         CHECK_LIMITS 'A', 'F'
