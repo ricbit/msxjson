@@ -597,19 +597,19 @@ check_string:
         cp      '"'
         jp      nz, json_error
         inc     hl
-        ; fall through to check_key
+        ; fall through to check_contents
 
 ; ----------------------------------------------------------------
 
-check_key:
+check_contents:
         ld      a, (hl)
         cp      '"'
         jp      z, check_success
         cp      '\\'
         jr      z, check_escape
-check_key_next:
+check_contents_next:
         inc     hl
-        jr      check_key
+        jr      check_contents
 
 ; ----------------------------------------------------------------
 
@@ -617,21 +617,21 @@ check_escape:
         inc     hl
         ld      a, (hl)
         cp      '"'
-        jr      z, check_key_next
+        jr      z, check_contents_next
         cp      '\\'
-        jr      z, check_key_next
+        jr      z, check_contents_next
         cp      '/'
-        jr      z, check_key_next
+        jr      z, check_contents_next
         cp      'b'
-        jr      z, check_key_next
+        jr      z, check_contents_next
         cp      'f'
-        jr      z, check_key_next
+        jr      z, check_contents_next
         cp      'n'
-        jr      z, check_key_next
+        jr      z, check_contents_next
         cp      'r'
-        jr      z, check_key_next
+        jr      z, check_contents_next
         cp      't'
-        jr      z, check_key_next
+        jr      z, check_contents_next
         cp      'u'
         jp      nz, json_error
         ld      b, 4
@@ -640,7 +640,7 @@ check_escape:
         call    check_hex_digit
         jp      nc, json_error
         djnz    1b
-        jr      check_key_next
+        jr      check_contents_next
 
 ; ----------------------------------------------------------------
 
