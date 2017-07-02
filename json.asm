@@ -595,21 +595,11 @@ check_contents_next:
 check_escape:
         inc     hl
         ld      a, (hl)
-        cp      '"'
-        jr      z, check_contents_next
-        cp      '\\'
-        jr      z, check_contents_next
-        cp      '/'
-        jr      z, check_contents_next
-        cp      'b'
-        jr      z, check_contents_next
-        cp      'f'
-        jr      z, check_contents_next
-        cp      'n'
-        jr      z, check_contents_next
-        cp      'r'
-        jr      z, check_contents_next
-        cp      't'
+        ex      de, hl
+        ld      bc, 8
+        ld      hl, string_escapes
+        cpir
+        ex      de, hl
         jr      z, check_contents_next
         cp      'u'
         jp      nz, json_error
@@ -652,11 +642,16 @@ check_digit:
         CHECK_LIMITS '0', '9'
 
 ; ----------------------------------------------------------------
-; Variables
+; Constants
 
+string_escapes: db      '"\/bfnrt'
 token_true:     db      'true', 0
 token_false:    db      'false', 0
 token_null:     db      'null', 0
+
+; ----------------------------------------------------------------
+; Variables
+
 json_start:     dw      0
 path_pos:       dw      0
 sentinel:       db      0
