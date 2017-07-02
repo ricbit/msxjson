@@ -250,14 +250,24 @@ parse_end_collection:
 
 parse_object:
         call    parse_end_collection
+        call    parse_next_item
+        jr      parse_object
+
+; ----------------------------------------------------------------
+
+parse_next_item:
         call    check_key_value
-        jr      c, parse_fail
+        jr      c, 1f
         call    skip_whitespace
         cp      '}'
-        jr      z, parse_fail
+        jr      z, 1f
         cp      ','
-        jr      z, parse_object
-        jr      parse_fail
+        jr      nz, 1f
+        ret
+1:
+        pop     bc
+        xor     a
+        ret
 
 ; ----------------------------------------------------------------
 
@@ -273,20 +283,13 @@ parse_key:
         call    skip_whitespace_exx
         cp      '{'
         jp      nz, parse_token_main_exx
-        inc     hl
-        call    skip_whitespace
+        call    skip_whitespace_next
         exx
 1:
         call    compare_key
         jr      c, parse_value
         call    skip_whitespace_exx
-        call    check_key_value
-        jr      c, parse_fail
-        call    skip_whitespace
-        cp      '}'
-        jr      z, parse_fail
-        cp      ','
-        jr      nz, parse_fail
+        call    parse_next_item
         inc     hl
         exx
         jr      1b
@@ -295,7 +298,7 @@ parse_key:
 
 compare_key:
         ; Returns CF=key found, NC=key not found
-        ld      (path_pos), hl
+        push    hl
         call    skip_whitespace_exx
         push    hl
         exx
@@ -325,13 +328,18 @@ compare_key:
         ld      a, (de)
         cp      '"'
         jr      nz, compare_fail
-json_error:
+        pop     bc
+compare_success:
         scf
         ret
 compare_fail:
         or      a
-        ld      hl, (path_pos)
+        pop     hl
         ret
+
+; ----------------------------------------------------------------
+
+json_error      equ     compare_success
 
 ; ----------------------------------------------------------------
 
@@ -377,14 +385,14 @@ skip_whitespace_exx:
 skip_whitespace:
         ld      a, (hl)
         cp      32
-        jr      z, 1f
+        jr      z, skip_whitespace_next
         cp      10
-        jr      z, 1f
+        jr      z, skip_whitespace_next
         cp      13
-        jr      z, 1f
+        jr      z, skip_whitespace_next
         cp      9
         ret     nz
-1:
+skip_whitespace_next:
         inc     hl
         jr      skip_whitespace
 
@@ -402,8 +410,7 @@ check_json:
 
 check_object:
         ; HL must be pointing to '{'
-        inc     hl
-        call    skip_whitespace
+        call    skip_whitespace_next
         cp      '}'
         jr      z, check_success
 check_object_key:
@@ -414,8 +421,7 @@ check_object_key:
         jr      z, check_success
         cp      ','
         jr      nz, json_error
-        inc     hl
-        call    skip_whitespace
+        call    skip_whitespace_next
         jr      check_object_key
 
 ; ----------------------------------------------------------------
@@ -482,7 +488,6 @@ check_fraction:
         cp      '.'
         jr      nz, check_scientific
         inc     hl
-        ld      a, (hl)
         call    check_digit_sequence
         ret     c
         ; Fall through to check_scientific
@@ -538,8 +543,7 @@ check_string_literal:
 
 check_array:
         ; HL must be pointing to '['
-        inc     hl
-        call    skip_whitespace
+        call    skip_whitespace_next
         cp      ']'
         jp      z, check_success
 check_array_next:
@@ -550,8 +554,7 @@ check_array_next:
         jp      z, check_success
         cp      ','
         jp      nz, json_error
-        inc     hl
-        call    skip_whitespace
+        call    skip_whitespace_next
         jr      check_array_next
 
 ; ----------------------------------------------------------------
@@ -597,7 +600,6 @@ check_escape:
 
         macro   CHECK_LIMITS lower, upper
         ; Returns CF=digit, NC=non-digit
-        ld      a, (hl)
         cp      upper + 1
         ret     nc
         cp      lower
@@ -621,16 +623,18 @@ check_hex_lower:
         CHECK_LIMITS 'a', 'f'
 
 check_digit:
+        ld      a, (hl)
         CHECK_LIMITS '0', '9'
 
 ; ----------------------------------------------------------------
 ; Constants
 
 identifiers:    db      '{["0tfn'
-string_escapes: db      '"\/bfnrt'
+escapes_cont:   db      '"\/br'
 token_true:     db      'true', 0
 token_false:    db      'false', 0
 token_null:     db      'null', 0
+string_escapes  equ     escapes_cont - 3
 
 ; ----------------------------------------------------------------
 ; Variables
