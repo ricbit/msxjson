@@ -132,11 +132,10 @@ get_string:
         ld      e, illegal_fcall
         cp      3
         jp      c, error_handler
+        bit     7, a
+        jp      nz, error_handler
         ld      hl, dsctmp
         ld      (dac + 2), hl
-        bit     7, a
-        ld      e, illegal_fcall
-        jp      nz, error_handler
         ret
 
 ; ----------------------------------------------------------------
@@ -194,6 +193,7 @@ parse_identify:
 parse_position:
         inc     hl
         ld      de, 0
+        call    skip_whitespace
 1:
         call    check_digit
         jr      nc, parse_fetch
