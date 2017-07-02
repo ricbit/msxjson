@@ -202,6 +202,29 @@ parse_fetch:
 ; ----------------------------------------------------------------
 
 parse_object:
+        inc     hl
+        call    skip_whitespace
+        exx
+        ld      a, e
+        or      d
+        dec     de
+        jp      z, parse_token_main
+        exx
+        call    check_string
+        jr      c, 2f
+        call    skip_whitespace
+        cp      ':'
+        jr      nz, 2f
+        inc     hl
+        call    check_anything
+        jr      c, 2f
+        call    skip_whitespace
+        cp      '}'
+        jr      z, 2f
+        cp      ','
+        jr      z, parse_object
+2:
+        xor     a
         ret
 
 ; ----------------------------------------------------------------
