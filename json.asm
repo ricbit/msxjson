@@ -113,6 +113,8 @@ parse_token_main:
         ld      a, (hl)
         or      a
         jr      z, parse_identify
+        cp      '#'
+        jr      z, parse_position
         ld      a, 255
         ret
 
@@ -141,6 +143,65 @@ parse_identify:
         ld      a, 4
         ret     nc
         ld      a, 0
+        ret
+
+; ----------------------------------------------------------------
+
+parse_position:
+        inc     hl
+        ld      de, 0
+1:
+        call    check_digit
+        jr      nc, parse_fetch
+        sub     '0'
+        ld      c, e
+        ld      b, d
+        ex      de, hl
+        add     hl, hl
+        add     hl, hl
+        add     hl, hl
+        add     hl, bc
+        add     hl, bc
+        ld      c, a
+        ld      b, 0
+        add     hl, bc
+        ex      de, hl
+        inc     hl
+        jr      1b
+
+; ----------------------------------------------------------------
+
+parse_fetch:
+        exx
+        call    skip_whitespace
+        cp      '{'
+        jr      z, parse_object
+        cp      '['
+        ld      a, 255
+        ret     nz
+1:
+        inc     hl
+        call    skip_whitespace
+        exx
+        ld      a, e
+        or      d
+        dec     de
+        jr      z, parse_token_main
+        exx
+        call    check_anything
+        jr      c, 2f
+        call    skip_whitespace
+        cp      ']'
+        jr      z, 2f
+        cp      ','
+        jr      z, 1b
+2:
+        xor     a
+        ret
+
+; ----------------------------------------------------------------
+
+parse_object:
         ret
 
 ; ----------------------------------------------------------------
