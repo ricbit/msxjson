@@ -31,6 +31,8 @@ start_bin:
         ld      (usrtab + 0), hl
         ld      hl, get_json_type
         ld      (usrtab + 2), hl
+        ld      hl, get_json_value
+        ld      (usrtab + 4), hl
         ret
 
 ; ----------------------------------------------------------------
@@ -83,7 +85,10 @@ get_json_type:
         ld      (hl), 0
         ; Start parsing
         ld      hl, (json_start)
-        ld      (json_pos), hl
+        push    hl
+        exx
+        pop     hl
+        exx
         call    parse_token
         ex      af, af
         ; Restore sentinel
@@ -103,11 +108,16 @@ get_json_type:
         ret
 
 ; ----------------------------------------------------------------
+; Get json value as a string
+
+get_json_value:
+        ret
+
+; ----------------------------------------------------------------
 
 parse_token:
         ld      hl, (path_pos)
         exx
-        ld      hl, (json_pos)
 parse_token_main_exx:
         exx
 parse_token_main:
@@ -603,7 +613,6 @@ token_true:     db      'true', 0
 token_false:    db      'false', 0
 token_null:     db      'null', 0
 json_start:     dw      0
-json_pos:       dw      0
 path_pos:       dw      0
 sentinel:       db      0
 sentinel_pos:   dw      0
