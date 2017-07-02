@@ -254,12 +254,8 @@ parse_object:
         jp      z, parse_token_main
         exx
         call    skip_whitespace
-        call    check_string
+        call    check_key
         jr      c, parse_fail
-        call    skip_whitespace
-        cp      ':'
-        jr      nz, parse_fail
-        inc     hl
         call    check_anything
         jr      c, parse_fail
         call    skip_whitespace
@@ -273,14 +269,11 @@ parse_object:
 
 parse_value:
         inc     hl
+parse_key_value:
         exx
         call    skip_whitespace
-        call    check_string
+        call    check_key
         jp      c, parse_fail
-        call    skip_whitespace
-        cp      ':'
-        jr      nz, parse_fail
-        inc     hl
         jp      parse_token_main_exx
 
 ; ----------------------------------------------------------------
@@ -299,12 +292,8 @@ parse_key:
         jr      c, parse_key_value
         exx
         call    skip_whitespace
-        call    check_string
+        call    check_key
         jr      c, parse_fail
-        call    skip_whitespace
-        cp      ':'
-        jr      nz, parse_fail
-        inc     hl
         call    check_anything
         jr      c, parse_fail
         call    skip_whitespace
@@ -315,19 +304,6 @@ parse_key:
         inc     hl
         exx
         jr      1b
-
-; ----------------------------------------------------------------
-
-parse_key_value:
-        exx
-        call    skip_whitespace
-        call    check_string
-        jp      c, parse_fail
-        call    skip_whitespace
-        cp      ':'
-        jp      nz, parse_fail
-        inc     hl
-        jp      parse_token_main_exx
 
 ; ----------------------------------------------------------------
 
@@ -445,12 +421,8 @@ check_object:
         cp      '}'
         jr      z, check_success
 check_object_key
-        call    check_string
+        call    check_key
         ret     c
-        call    skip_whitespace
-        cp      ':'
-        jr      nz, json_error
-        inc     hl
         call    check_anything
         ret     c
         call    skip_whitespace
@@ -461,6 +433,16 @@ check_object_key
         inc     hl
         call    skip_whitespace
         jr      check_object_key
+
+; ----------------------------------------------------------------
+
+check_key:
+        call    check_string
+        ret     c
+        call    skip_whitespace
+        cp      ':'
+        inc     hl
+        ret
 
 ; ----------------------------------------------------------------
 
