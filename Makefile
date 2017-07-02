@@ -4,7 +4,7 @@ run : json.bin
 	rm -rf test/autoexec.bas
 	./openmsx -machine Panasonic_FS-A1GT -diska test
 
-test : json.bin
+test : json.bin test/test.bas
 	cp test/test.bas test/autoexec.bas
 	./openmsx -machine Panasonic_FS-A1GT -diska test -script test.tcl
 
