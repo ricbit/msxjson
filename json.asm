@@ -146,7 +146,7 @@ parse_token:
 parse_token_main_exx:
         exx
 parse_token_main:
-        ld      a, (hl)
+        call    skip_whitespace
         or      a
         jr      z, parse_identify
         cp      '#'

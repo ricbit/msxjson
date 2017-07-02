@@ -11,7 +11,7 @@
 110 DATA "",2,"#0",5,"#1",6,"#2",7,"#3",0,"END":GOSUB 4000
 120 DATA "#0","true","#1","false","#2","null","END":GOSUB5000
 130 A$="JSON5.TXT":GOSUB3000
-140 DATA "",1,"#0",3,"#0$",1,"#0$#0",3,"#0$#1$#2$",4
+140 DATA "",1,"#0",3,"#0$",1,"#0$#0",3,"#0 $ #1$ #2$",4
 150 DATA "&widget",1,"&widge",0,"&widgett",0
 160 DATA "&widget&debug",3,"&widget#1$&width",4,"END":GOSUB4000
 170 DATA "&widget&debug","on","#0$#1$&name","main_window"
