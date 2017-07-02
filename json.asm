@@ -108,6 +108,7 @@ parse_token:
         ld      hl, (path_pos)
         exx
         ld      hl, (json_pos)
+parse_token_main_exx:
         exx
 parse_token_main:
         ld      a, (hl)
@@ -117,6 +118,8 @@ parse_token_main:
         jr      z, parse_position
         cp      '$'
         jp      z, parse_value
+        cp      '&'
+        jp      z, parse_key
         ld      a, 255
         ret
 
@@ -239,8 +242,95 @@ parse_value:
         cp      ':'
         jr      nz, parse_fail
         inc     hl
+        jp      parse_token_main_exx
+
+; ----------------------------------------------------------------
+
+parse_key:
+        inc     hl
         exx
-        jp      parse_token_main
+        call    skip_whitespace
+        cp      '{'
+        jp      nz, parse_token_main_exx
+        inc     hl
+        call    skip_whitespace
+        exx
+1:
+        call    compare_key
+        jr      c, parse_key_value
+        exx
+        call    skip_whitespace
+        call    check_string
+        jr      c, parse_fail
+        call    skip_whitespace
+        cp      ':'
+        jr      nz, parse_fail
+        inc     hl
+        call    check_anything
+        jr      c, parse_fail
+        call    skip_whitespace
+        cp      '}'
+        jr      z, parse_fail
+        cp      ','
+        jr      nz, parse_fail
+        inc     hl
+        exx
+        jr      1b
+
+; ----------------------------------------------------------------
+
+parse_key_value:
+        exx
+        call    skip_whitespace
+        call    check_string
+        jp      c, parse_fail
+        call    skip_whitespace
+        cp      ':'
+        jp      nz, parse_fail
+        inc     hl
+        jp      parse_token_main_exx
+
+; ----------------------------------------------------------------
+
+compare_key:
+        ; Returns CF=key found, NC=key not found
+        ld      (path_pos), hl
+        exx
+        call    skip_whitespace
+        push    hl
+        exx
+        pop     de
+        ld      a, (de)
+        cp      '"'
+        jr      nz, compare_fail
+        inc     de
+1:
+        ld      a, (hl)
+        or      a
+        jr      z, 2f
+        cp      '#'
+        jr      z, 2f
+        cp      '&'
+        jr      z, 2f
+        cp      '$'
+        jr      z, 2f
+        ex      de, hl
+        cp      (hl)
+        ex      de, hl
+        jr      nz, compare_fail
+        inc     hl
+        inc     de
+        jr      1b
+2:
+        ld      a, (de)
+        cp      '"'
+        jr      nz, compare_fail
+        scf
+        ret
+compare_fail:
+        or      a
+        ld      hl, (path_pos)
+        ret
 
 ; ----------------------------------------------------------------
 
