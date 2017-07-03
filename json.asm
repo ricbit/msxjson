@@ -52,6 +52,7 @@ set_json_start:
         ; Return 0=error, -1=success
         ccf
         sbc     hl, hl
+return_integer:
         ld      (dac + 2), hl
         ret
 
@@ -73,6 +74,7 @@ get_json_action:
         or      l
         jp      z, ifc_error
         ; Save sentinel
+        push    hl
         ld      ix, (dac + 2)
         ld      c, (ix)
         ld      l, (ix + 1)
@@ -83,9 +85,9 @@ get_json_action:
         ld      a, (hl)
         ld      (sentinel_pos), hl
         ld      (sentinel), a
-        ld      (hl), 0
+        ld      (hl), b
+        pop     hl
         ; Start parsing
-        ld      hl, (json_start)
         push    hl
         exx
         pop     hl
@@ -106,8 +108,7 @@ get_json_action:
         ex      af, af
         ld      h, 0
         ld      l, a
-        ld      (dac + 2), hl
-        ret
+        jr      return_integer
 
 ; ----------------------------------------------------------------
 ; Get json value as a string
@@ -124,8 +125,7 @@ get_string:
         cp      3
         jp      c, ifc_error
         ld      hl, dsctmp
-        ld      (dac + 2), hl
-        ret
+        jr      return_integer
 
 ; ----------------------------------------------------------------
 
@@ -145,6 +145,7 @@ parse_token_main:
         jp      z, parse_value
         cp      '&'
         jp      z, parse_key
+ifc_error_pop:
         pop     bc
 ifc_error:
         ld      e, illegal_fcall
@@ -210,8 +211,7 @@ parse_fetch:
         cp      '{'
         jr      z, parse_object
         cp      '['
-        ld      a, 255
-        ret     nz
+        jr      nz, ifc_error_pop
 1:
         call    parse_end_collection
         call    check_anything
@@ -362,8 +362,7 @@ parse_string_literal:
         inc     hl
         ld      (dsctmp + 1), hl
         push    hl
-        dec     hl
-        call    check_anything
+        call    check_contents_no_inc
         dec     hl
         jr      parse_string_common
 
@@ -557,6 +556,7 @@ check_string:
 
 check_contents:
         inc     hl
+check_contents_no_inc:
         ld      a, (hl)
         cp      '"'
         jp      z, check_success
