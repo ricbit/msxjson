@@ -21,6 +21,24 @@ The lib was designed to blend with MSX BASIC idiomatically, and it uses a macro 
 
 There are three calls available in the API:
 
-* `S=USR(ADDR)`: Sets JSON start address.
-* `T=USR1(Q$)`: Gets the type of the JSON token pointed by query Q$.
-* `V$=USR2(Q$)`: Gets the value of the JSON token pointer by query Q$ as a string.
+* `S=USR(AD)`: Sets JSON start address `AD`.
+* `T=USR1(Q$)`: Gets the type of the JSON token pointed by query `Q$`.
+* `V$=USR2(Q$)`: Gets the value of the JSON token pointer by query `Q$` as a string.
+
+Detailed usage for each call is as follows:
+
+## `S=USR(AD)`: Sets JSON start address
+
+Sets the JSON start address as the given integer AD. Validates the JSON and returns the validation status. Example:
+
+`IF NOT USR(&H9000) THEN PRINT "NOT A VALID JSON FILE"`
+
+Status code on return follows the MSX BASIC boolean convention:
+
+* 0 = JSON is invalid
+* -1 = JSON is valid
+
+This call is always required. Further calls to `USR1` and `USR2` will fail if there is not a valid JSON file set up by this call.
+
+Errors:
+* Returns `Type mismatch` if `AD` is not an integer.
