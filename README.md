@@ -42,3 +42,59 @@ This call is always required. Further calls to `USR1` and `USR2` will fail if th
 
 Errors:
 * Returns `Type mismatch` if `AD` is not an integer.
+
+## `T=USR1(Q$)`: Gets type of JSON token
+
+Gets the type of JSON token pointed by query `Q$`. The return code is an integer whose meaning is:
+
+* 0 = nothing found
+* 1 = object (dict)
+* 2 = array
+* 3 = string
+* 4 = number
+* 5 = true
+* 6 = false
+* 7 = null
+
+Suppose you have made a query to your drone api and received this JSON:
+
+```json
+{
+        "info": {
+                "name": "Cool Drone",
+                "origin": "China"
+        },
+        "hasCamera": true,
+        "hasMicrophone": false,
+        "password": null,
+        "position": [1.0, 2.0, -1.0]
+}
+```
+
+These are some sample queries:
+
+```
+PRINT USR1("%info")
+1
+PRINT USR1("%info%name")
+3
+PRINT USR1("%info%origin")
+3
+PRINT USR1("%hasCamera")
+5
+PRINT USR1("%hasMicrophone")
+6
+PRINT USR1("%password")
+7
+PRINT USR1("%position")
+2
+PRINT USR1("%position#0")
+4
+PRINT USR1("%position#4")
+0
+PRINT USR1("%unknown")
+0
+```
+
+
+
