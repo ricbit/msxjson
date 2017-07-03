@@ -79,20 +79,20 @@ get_json_action:
         ld      c, (ix)
         ld      l, (ix + 1)
         ld      h, (ix + 2)
-        ld      (path_pos), hl
+        ld      d, h
+        ld      e, l
         ld      b, 0
         add     hl, bc
         ld      a, (hl)
         ld      (sentinel_pos), hl
         ld      (sentinel), a
         ld      (hl), b
-        pop     hl
         ; Start parsing
-        push    hl
         exx
         pop     hl
         exx
-        call    parse_token
+        ex      de, hl
+        call    parse_token_main
         ex      af, af
         ; Restore sentinel
         ld      hl, (sentinel_pos)
@@ -129,9 +129,6 @@ get_string:
 
 ; ----------------------------------------------------------------
 
-parse_token:
-        ld      hl, (path_pos)
-        exx
 parse_token_main_exx:
         exx
 parse_token_main:
@@ -248,16 +245,20 @@ parse_object:
 
 parse_next_item:
         call    check_key_value
-        jr      c, 1f
+        jr      c, parse_not_found
         call    skip_whitespace
         cp      '}'
-        jr      z, 1f
+        jr      z, parse_not_found
         cp      ','
         ret     z
-1:
-        pop     bc
+parse_not_found:
+        pop     hl
         xor     a
         ret
+
+; ----------------------------------------------------------------
+
+compare_fail    equ     parse_not_found
 
 ; ----------------------------------------------------------------
 
@@ -321,10 +322,6 @@ compare_key:
         pop     bc
 compare_success:
         scf
-        ret
-compare_fail:
-        or      a
-        pop     hl
         ret
 
 ; ----------------------------------------------------------------
@@ -625,7 +622,6 @@ string_escapes  equ     escapes_cont - 3
 ; Variables
 
 json_start:     dw      0
-path_pos:       dw      0
 sentinel:       db      0
 sentinel_pos:   dw      0
 get_action:     db      0
