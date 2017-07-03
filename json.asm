@@ -71,19 +71,15 @@ get_json_action:
         ld      hl, (json_start)
         ld      a, h
         or      l
-        ld      e, illegal_fcall
-        jp      z, error_handler
+        jp      z, ifc_error
         ; Save sentinel
         ld      ix, (dac + 2)
-        ld      a, (ix)
+        ld      c, (ix)
         ld      l, (ix + 1)
         ld      h, (ix + 2)
         ld      (path_pos), hl
-        add     a, l
-        ld      l, a
-        ld      a, h
-        adc     a, 0
-        ld      h, a
+        ld      b, 0
+        add     hl, bc
         ld      a, (hl)
         ld      (sentinel_pos), hl
         ld      (sentinel), a
@@ -111,9 +107,6 @@ get_json_action:
         ld      h, 0
         ld      l, a
         ld      (dac + 2), hl
-        bit     7, a
-        ld      e, illegal_fcall
-        jp      nz, error_handler
         ret
 
 ; ----------------------------------------------------------------
@@ -128,11 +121,8 @@ get_string:
         ld      a, 3
         ld      (valtyp), a
         ex      af, af
-        ld      e, illegal_fcall
         cp      3
-        jp      c, error_handler
-        bit     7, a
-        jp      nz, error_handler
+        jp      c, ifc_error
         ld      hl, dsctmp
         ld      (dac + 2), hl
         ret
@@ -155,8 +145,10 @@ parse_token_main:
         jp      z, parse_value
         cp      '&'
         jp      z, parse_key
-        ld      a, 255
-        ret
+        pop     bc
+ifc_error:
+        ld      e, illegal_fcall
+        jp      error_handler
 
 ; ----------------------------------------------------------------
 
