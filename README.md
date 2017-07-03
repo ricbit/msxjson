@@ -113,7 +113,7 @@ Some sample queries for the JSON above:
 PRINT USR1("&info&name")
 Cool Drone
 PRINT USR1("&info&origin")
-Chine
+China
 PRINT USR1("&hasCamera")
 true
 PRINT USR1("&hasMicrophone")
@@ -124,9 +124,76 @@ PRINT USR1("&position#0")
 1.0
 ```
 
+If the string is greater than 255 chars, then only the first 255 chars will be returned (this is limitation of MSX BASIC).
+
 Errors:
 * Returns `Type mismatch` if `Q$` is not a string.
 * Returns `Invalid function call` if `Q$` is not in the format expected.
 * Returns `Invalid function call` if `USR(AD)` was not called first.
 * Returns `Invalid function call` if the JSON type is not string, number, true, false or null.
+
+## Query format
+
+There are currently three commands in the macro language used by the queries:
+
+* `#N`: Traverse to the `N`-th element of this collection (object or array).
+* `$`: Traverse to the value pointed by the current object key.
+* `&KEY`: Traverse to the value pointed by the given key.
+
+Let's again consider the JSON file above. The `#N` command retrieves the `N`-th element of an array or object:
+
+```basic
+PRINT USR2("#0")
+info
+PRINT USR2("#1")
+hasCamera
+PRINT USR2("&position#0")
+1.0
+PRINT USR2("&position#1")
+2.0
+PRINT USR2("&position#2")
+-1.0
+```
+
+For objects, the element pointed is always the key. If you want the value pointed by the key, you need the command `$`:
+
+```basic
+PRINT USR2("#0")
+info
+PRINT USR2("#0$#0")
+name
+PRINT USR2("#0$#0$")
+Cool Drone
+```
+
+If the object or array is shorted than the query, `USR1(Q$)` will return zero, and `USR2(Q$)` will return `Invalid function call`. You can use this to find the length of an array:
+
+```basic
+PRINT USR1("&position#0")
+4
+PRINT USR1("&position#1")
+4
+PRINT USR1("&position#2")
+4
+PRINT USR1("&position#3")
+0
+```
+
+Spaces are allowed between `#` and the number, to facilitate BASIC usage with `STR$`:
+
+```basic
+PRINT USR2("# 0")
+info
+```
+
+The `&` command retrieves the value pointed by a key. No spaces are allowed between `&` and the key, as the key may contain spaces. Keys containing the chars `$&#` are not allowed. String comparison is a naive byte-oriented comparison, escapes and unicode will not work with this command.
+
+```basic
+PRINT USR2("&info&name")
+Cool Drone
+```
+
+## Credits
+
+Written by Ricardo Bittencourt in 2017. Free for commercial usage (a note in the credits is appreciated).
 
