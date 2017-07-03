@@ -90,9 +90,9 @@ PRINT USR1("&position")
 2
 PRINT USR1("&position#0")
 4
-PRINT USR1("%position#4")
+PRINT USR1("&position#4")
 0
-PRINT USR1("%unknown")
+PRINT USR1("&unknown")
 0
 ```
 
