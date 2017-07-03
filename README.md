@@ -16,6 +16,7 @@ The lib was designed to blend with MSX BASIC idiomatically, and it uses a macro 
 * JSON file must be loaded into BASIC-visible memory (`0x8000-0xFFFF`).
 * JSON parsing follows [RFC 7159](https://tools.ietf.org/html/rfc7159) to the letter. Take care with caveats of the format (integers may not start with a 0, strings must always use double-quotes instead of single quotes, trailing commas before closing an array are not allowed, etc).
 * No extra memory beyond the lib itself. No additional data structures are created when parsing the JSON, to minimize memory usage. However, all lib calls are O(n) in the size of the JSON file.
+* Unit-tested to ensure lib quality.
 
 ## Usage
 
