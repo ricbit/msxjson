@@ -4,7 +4,7 @@ A small library to parse JSON files under MSX BASIC.
 
 ## Rationale
 
-There are many network cartridges available for MSX. You may want to use them to connect to the many REST endpoints around us, but many of them only communicate in JSON. This lib provides JSON parsing capabilities to fill this gap.
+There are a lot of network cartridges available for MSX. You may want to use them to connect to the many REST endpoints around us, but most only communicate in JSON. This lib provides JSON parsing capabilities to fill this gap.
 
 The lib was designed to blend with MSX BASIC idiomatically, and it uses a macro command interface just like PLAY and DRAW to achieve this goal.
 
@@ -14,7 +14,7 @@ The lib was designed to blend with MSX BASIC idiomatically, and it uses a macro 
 * Optimized for size. The entire lib fits under 1kb.
 * Not relocatable. Provided binary loads from `0xD000`, but you can change the `ORG` in the source file if you need a different start address.
 * JSON file must be loaded into BASIC-visible memory (`0x8000-0xFFFF`).
-* JSON parsing follows [RFC 7159](https://tools.ietf.org/html/rfc7159) to the letter. Take care with caveats of the format (integers may not start with a 0, strings must always use double-quotes instead of single quotes, trailing commas before closing an array is not allowed, etc).
+* JSON parsing follows [RFC 7159](https://tools.ietf.org/html/rfc7159) to the letter. Take care with caveats of the format (integers may not start with a 0, strings must always use double-quotes instead of single quotes, trailing commas before closing an array are not allowed, etc).
 * No extra memory beyond the lib itself. No additional data structures are created when parsing the JSON, to minimize memory usage. However, all lib calls are O(n) in the size of the JSON file.
 
 ## Usage
@@ -124,7 +124,7 @@ PRINT USR1("&position#0")
 1.0
 ```
 
-If the string is greater than 255 chars, then only the first 255 chars will be returned (this is limitation of MSX BASIC).
+If the string length is greater than 255 chars, then only the first 255 chars will be returned (this is limitation of MSX BASIC).
 
 Errors:
 * Returns `Type mismatch` if `Q$` is not a string.
@@ -136,7 +136,7 @@ Errors:
 
 There are currently three commands in the macro language used by the queries:
 
-* `#N`: Traverse to the `N`-th element of this collection (object or array).
+* `#N`: Traverse to the `N`-th element of this collection (object or array). The numbering is 0-based.
 * `$`: Traverse to the value pointed by the current object key.
 * `&KEY`: Traverse to the value pointed by the given key.
 
