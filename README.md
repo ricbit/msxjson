@@ -73,22 +73,22 @@ Suppose you have made a query to your drone api and received this JSON:
 
 These are some sample queries:
 
-```
-PRINT USR1("%info")
+```basic
+PRINT USR1("&info")
 1
-PRINT USR1("%info%name")
+PRINT USR1("&info&name")
 3
-PRINT USR1("%info%origin")
+PRINT USR1("&info&origin")
 3
-PRINT USR1("%hasCamera")
+PRINT USR1("&hasCamera")
 5
-PRINT USR1("%hasMicrophone")
+PRINT USR1("&hasMicrophone")
 6
-PRINT USR1("%password")
+PRINT USR1("&password")
 7
-PRINT USR1("%position")
+PRINT USR1("&position")
 2
-PRINT USR1("%position#0")
+PRINT USR1("&position#0")
 4
 PRINT USR1("%position#4")
 0
@@ -96,5 +96,37 @@ PRINT USR1("%unknown")
 0
 ```
 
+The format for the query `Q$` is described below.
 
+Errors:
+* Returns `Type mismatch` if `Q$` is not a string.
+* Returns `Invalid function call` if `Q$` is not in the format expected.
+* Returns `Invalid function call` if `USR(AD)` was not called first.
+
+## `V$=USR2(Q$)`: Gets value of JSON token
+
+Gets the value of the JSON token pointer `Q$`. The value is always returned as a string, even when the JSON token type is different. For instance, the number `10` will be returned as a string `"10"`. To differentiate between `10` and `"10"`, you need to check the type returned by `USR1(Q$)`.
+
+Some sample queries for the JSON above:
+
+```basic
+PRINT USR1("&info&name")
+Cool Drone
+PRINT USR1("&info&origin")
+Chine
+PRINT USR1("&hasCamera")
+true
+PRINT USR1("&hasMicrophone")
+false
+PRINT USR1("&password")
+null
+PRINT USR1("&position#0")
+1.0
+```
+
+Errors:
+* Returns `Type mismatch` if `Q$` is not a string.
+* Returns `Invalid function call` if `Q$` is not in the format expected.
+* Returns `Invalid function call` if `USR(AD)` was not called first.
+* Returns `Invalid function call` if the JSON type is not string, number, true, false or null.
 
