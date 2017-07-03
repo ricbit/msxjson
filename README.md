@@ -166,7 +166,7 @@ PRINT USR2("#0$#0$")
 Cool Drone
 ```
 
-If the object or array is shorted than the query, `USR1(Q$)` will return zero, and `USR2(Q$)` will return `Invalid function call`. You can use this to find the length of an array:
+If the object or array is shorter than the query, `USR1(Q$)` will return zero, and `USR2(Q$)` will return `Invalid function call`. You can use this to find the length of an array:
 
 ```basic
 PRINT USR1("&position#0")
