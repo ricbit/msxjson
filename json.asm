@@ -202,9 +202,8 @@ parse_position:
         ex      de, hl
         add     hl, hl
         add     hl, hl
+        add     hl, bc
         add     hl, hl
-        add     hl, bc
-        add     hl, bc
         ld      c, a
         ld      b, 0
         add     hl, bc
@@ -262,8 +261,7 @@ parse_next_item:
         cp      '}'
         jr      z, 1f
         cp      ','
-        jr      nz, 1f
-        ret
+        ret     z
 1:
         pop     bc
         xor     a
@@ -359,8 +357,7 @@ parse_string_common:
         pop     de
         sbc     hl, de
         ld      a, h
-        cpl
-        cp      255
+        add     a, 255
         sbc     a, a
         or      l
         ld      (dsctmp), a
@@ -612,12 +609,8 @@ check_escape:
 check_hex_digit:
         call    check_digit
         ret     c
-        call    check_hex_lower
-        ret     c
-        ; Fall through to check_hex_upper
-
-check_hex_upper:
-        CHECK_LIMITS 'A', 'F'
+        or      32
+        ; Fall through to check_hex_lower
 
 check_hex_lower:
         CHECK_LIMITS 'a', 'f'
