@@ -49,7 +49,11 @@ set_json_start:
         ld      (json_start), hl
         ; Check for valid json.
         call    check_json
+        jr      nc, 1f
+        ld      hl, 0
+        ld      (json_start), hl
         ; Return 0=error, -1=success
+1:
         ccf
         sbc     hl, hl
 return_integer:
