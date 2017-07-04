@@ -93,7 +93,7 @@ get_json_action:
         exx
         ex      de, hl
         call    parse_token_main
-        ex      af, af
+        ld      b, a
         ; Restore sentinel
         ld      hl, (sentinel_pos)
         ld      a, (sentinel)
@@ -105,9 +105,8 @@ get_json_action:
         ; Return an integer
         ld      a, 2
         ld      (valtyp), a
-        ex      af, af
         ld      h, 0
-        ld      l, a
+        ld      l, b
         jr      return_integer
 
 ; ----------------------------------------------------------------
@@ -121,7 +120,7 @@ get_string:
         ; Return a string
         ld      a, 3
         ld      (valtyp), a
-        ex      af, af
+        ld      a, b
         cp      3
         jp      c, ifc_error
         ld      hl, dsctmp
@@ -203,6 +202,18 @@ parse_position:
 
 ; ----------------------------------------------------------------
 
+parse_end_collection:
+        inc     hl
+        exx
+        ld      a, e
+        or      d
+        dec     de
+        jp      nz, skip_whitespace_exx
+        pop     bc
+        jr      parse_token_main
+
+; ----------------------------------------------------------------
+
 parse_fetch:
         call    skip_whitespace_exx
         cp      '{'
@@ -221,18 +232,6 @@ parse_fetch:
 parse_fail:
         xor     a
         ret
-
-; ----------------------------------------------------------------
-
-parse_end_collection:
-        inc     hl
-        exx
-        ld      a, e
-        or      d
-        dec     de
-        jp      nz, skip_whitespace_exx
-        pop     bc
-        jp      parse_token_main
 
 ; ----------------------------------------------------------------
 
@@ -265,7 +264,7 @@ compare_fail    equ     parse_not_found
 parse_value:
         call    skip_whitespace_exx
         call    check_key
-        jp      c, parse_fail
+        jr      c, parse_fail
         jp      parse_token_main_exx
 
 ; ----------------------------------------------------------------
