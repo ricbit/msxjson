@@ -98,6 +98,9 @@ get_json_action:
         ld      hl, (sentinel_pos)
         ld      a, (sentinel)
         ld      (hl), a
+        ; Check for error
+        bit     7, b
+        jr      nz, ifc_error
         ; Check for string action
         ld      a, (get_action)
         or      a
@@ -122,7 +125,7 @@ get_string:
         ld      (valtyp), a
         ld      a, b
         cp      3
-        jp      c, ifc_error
+        jr      c, ifc_error
         ld      hl, dsctmp
         jr      return_integer
 
@@ -141,8 +144,9 @@ parse_token_main:
         jp      z, parse_value
         cp      '&'
         jp      z, parse_key
-ifc_error_pop:
-        pop     bc
+parse_return_error:
+        ld      a, 255
+        ret
 ifc_error:
         ld      e, illegal_fcall
         jp      error_handler
@@ -182,6 +186,8 @@ parse_identify:
 parse_position:
         ld      de, 0
         call    skip_whitespace
+        call    check_digit
+        jr      nc, parse_return_error
 1:
         call    check_digit
         jr      nc, parse_fetch
@@ -219,7 +225,7 @@ parse_fetch:
         cp      '{'
         jr      z, parse_object
         cp      '['
-        jr      nz, ifc_error_pop
+        jr      nz, parse_return_error
 1:
         call    parse_end_collection
         call    check_anything
