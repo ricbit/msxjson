@@ -49,13 +49,11 @@ set_json_start:
         ld      (json_start), hl
         ; Check for valid json.
         call    check_json
-        jr      nc, 1f
-        ld      hl, 0
-        ld      (json_start), hl
         ; Return 0=error, -1=success
-1:
         ccf
         sbc     hl, hl
+        jr      c, return_integer
+        ld      (json_start), hl
 return_integer:
         ld      (dac + 2), hl
         ret
@@ -63,8 +61,11 @@ return_integer:
 ; ----------------------------------------------------------------
 ; Get json token type
 
+get_json_value:
+        ; Alternate entry point, set token type as non-zero.
+        db      03Eh
 get_json_type:
-        ; Set token type flag
+        ; Set token type as zero.
         xor     a
 get_json_action:
         ld      (get_action), a
@@ -76,7 +77,7 @@ get_json_action:
         ld      hl, (json_start)
         ld      a, h
         or      l
-        jp      z, ifc_error
+        jr      z, ifc_error
         ; Save sentinel
         push    hl
         ld      ix, (dac + 2)
@@ -108,30 +109,25 @@ get_json_action:
         ; Check for string action
         ld      a, (get_action)
         or      a
+        ld      a, 2
         jr      nz, get_string
         ; Return an integer
-        ld      a, 2
-        ld      (valtyp), a
         ld      h, 0
         ld      l, b
+return_valtyp:
+        ld      (valtyp), a
         jr      return_integer
 
 ; ----------------------------------------------------------------
 ; Get json value as a string
 
-get_json_value:
-        ; Set token type flag
-        ld      a, 1
-        jr      get_json_action
 get_string:
         ; Return a string
-        ld      a, 3
-        ld      (valtyp), a
-        ld      a, b
-        cp      3
-        jr      c, ifc_error
+        cp      b
+        jr      nc, ifc_error
+        inc     a
         ld      hl, dsctmp
-        jr      return_integer
+        jr      return_valtyp
 
 ; ----------------------------------------------------------------
 
