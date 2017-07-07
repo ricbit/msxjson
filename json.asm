@@ -172,9 +172,9 @@ parse_identify:
         push    hl
         call    check_number
         pop     hl
-        ld      a, 4
-        ret     nc
-        ld      a, 0
+        ccf
+        sbc     a, a
+        and     4
         ret
 2:
         ex      de, hl
