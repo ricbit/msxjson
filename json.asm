@@ -495,8 +495,7 @@ check_scientific:
         ld      a, (hl)
         cp      '+'
         jr      nz, 2f
-        inc     hl
-        jr      check_digit_sequence
+        xor     6
 2:
         cp      '-'
         jr      nz, check_digit_sequence
@@ -589,17 +588,6 @@ check_escape:
 
 ; ----------------------------------------------------------------
 
-        macro   CHECK_LIMITS lower, upper
-        ; Returns CF=digit, NC=non-digit
-        cp      upper + 1
-        ret     nc
-        cp      lower
-        ccf
-        ret
-        endm
-
-; ----------------------------------------------------------------
-
 check_hex_digit:
         call    check_digit
         ret     c
@@ -607,11 +595,21 @@ check_hex_digit:
         ; Fall through to check_hex_lower
 
 check_hex_lower:
-        CHECK_LIMITS 'a', 'f'
+        ; Returns CF=digit, NC=non-digit
+        cp      'f' + 1
+        ret     nc
+        add     a, 256 - 'a'
+        ret
 
 check_digit:
         ld      a, (hl)
-        CHECK_LIMITS '0', '9'
+        ; Returns CF=digit, NC=non-digit
+        cp      '9' + 1
+        ret     nc
+        ;cp      '0'
+        ;ccf
+        add     a, 256 - '0'
+        ret
 
 ; ----------------------------------------------------------------
 ; Constants
