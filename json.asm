@@ -606,9 +606,8 @@ check_digit:
         ; Returns CF=digit, NC=non-digit
         cp      '9' + 1
         ret     nc
-        ;cp      '0'
-        ;ccf
-        add     a, 256 - '0'
+        cp      '0'
+        ccf
         ret
 
 ; ----------------------------------------------------------------
