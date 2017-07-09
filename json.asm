@@ -32,9 +32,11 @@ start_bin:
         ld      (usrtab + 0), hl
         ld      hl, get_json_type
         ld      (usrtab + 2), hl
-        ld      hl, get_json_value
+        inc     hl
         ld      (usrtab + 4), hl
         ret
+
+        assert (get_json_type == get_json_value + 1)
 
 ; ----------------------------------------------------------------
 ; Set json start
@@ -131,6 +133,19 @@ get_string:
 
 ; ----------------------------------------------------------------
 
+parse_end_collection:
+        inc     hl
+        exx
+        ld      a, e
+        or      d
+        dec     de
+        jp      nz, skip_whitespace_exx
+        pop     bc
+        exx
+        ; Fall through to parse_token_main_exx
+
+; ----------------------------------------------------------------
+
 parse_token_main_exx:
         exx
 parse_token_main:
@@ -205,18 +220,6 @@ parse_position:
         ex      de, hl
         inc     hl
         jr      1b
-
-; ----------------------------------------------------------------
-
-parse_end_collection:
-        inc     hl
-        exx
-        ld      a, e
-        or      d
-        dec     de
-        jp      nz, skip_whitespace_exx
-        pop     bc
-        jr      parse_token_main
 
 ; ----------------------------------------------------------------
 

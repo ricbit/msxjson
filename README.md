@@ -32,7 +32,7 @@ Detailed usage for each call is as follows:
 
 Sets the JSON start address as the given integer AD. Validates the JSON and returns the validation status. Example:
 
-`IF NOT USR(&H9000) THEN PRINT "NOT A VALID JSON FILE"`
+`IF USR(&H9000)=0 THEN PRINT "NOT A VALID JSON FILE"`
 
 Status code on return follows the MSX BASIC boolean convention:
 
