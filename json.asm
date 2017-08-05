@@ -32,7 +32,7 @@ start_bin:
         ld      (usrtab + 0), hl
         ld      hl, get_json_type
         ld      (usrtab + 2), hl
-        inc     hl
+        dec     hl
         ld      (usrtab + 4), hl
         ret
 
