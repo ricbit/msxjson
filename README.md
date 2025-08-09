@@ -111,17 +111,17 @@ Gets the value of the JSON token pointer `Q$`. The value is always returned as a
 Some sample queries for the JSON above:
 
 ```basic
-PRINT USR1("&info&name")
+PRINT USR2("&info&name")
 Cool Drone
-PRINT USR1("&info&origin")
+PRINT USR2("&info&origin")
 China
-PRINT USR1("&hasCamera")
+PRINT USR2("&hasCamera")
 true
-PRINT USR1("&hasMicrophone")
+PRINT USR2("&hasMicrophone")
 false
-PRINT USR1("&password")
+PRINT USR2("&password")
 null
-PRINT USR1("&position#0")
+PRINT USR2("&position#0")
 1.0
 ```
 
