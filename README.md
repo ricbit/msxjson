@@ -125,7 +125,7 @@ PRINT USR1("&position#0")
 1.0
 ```
 
-If the string length is greater than 255 chars, then only the first 255 chars will be returned (this is limitation of MSX BASIC).
+If the string length is greater than 255 chars, then only the first 255 chars will be returned (this is a limitation of MSX BASIC).
 
 Errors:
 * Returns `Type mismatch` if `Q$` is not a string.
